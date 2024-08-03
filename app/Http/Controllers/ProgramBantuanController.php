@@ -4,17 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Models\Data;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class ProgramBantuanController extends Controller
 {
     public function index()
     {
-        return view('programbantuan.index');
+        $response = Http::get('http://127.0.0.1:8002/api/getAllDataPotensiPermasalahanDesa/');
+        $permasalahans = $response->object();
+        return view('programbantuan.index',compact('permasalahans'));
     }
 
     public function rekomendasi_bantuan(Request $request)
     {
-        $inputTeksGabungan = $request->inputTeks;
+        if($request->inputTeks == null){
+            $inputTeksGabungan = $request->potensi .' '. $request->permasalahan;
+        }else{
+            $inputTeksGabungan = $request->inputTeks;
+        }
 
         $dataHistori = $this->data_histori();
 
@@ -136,22 +143,16 @@ class ProgramBantuanController extends Controller
         // Tahap 1: Lowercasing
         $tokens = array_map('strtolower', $tokens);
 
-        // Tahap 2: Tokenisasi (opsional, jika $tokens sudah dalam bentuk kata-kata individual)
-        // ...
-
-        // Tahap 3: Penghapusan tanda baca dan karakter khusus menggunakan regex
+        // Tahap 2: Penghapusan tanda baca dan karakter khusus menggunakan regex
         $tokens = preg_replace("/[^a-zA-Z0-9\s]/", "", $tokens);
 
-        // Tahap 4: Penghapusan stop words
+        // Tahap 3: Penghapusan stop words
         $stopWords = array("dan", "atau", "dari", "yang"); // Daftar stop words yang ingin dihapus
         $tokens = array_diff($tokens, $stopWords);
 
-        // Tahap 5: Stemming atau Lemmatization (opsional, tergantung pada kebutuhan)
+        // Tahap 4: Stemming atau Lemmatization (opsional, tergantung pada kebutuhan)
         $stemmedTokens = array_map([$this, 'simpleStem'], $tokens);
         $tokens = $stemmedTokens;
-
-        // Tahap 6: Pembersihan teks lainnya (opsional, tergantung pada kebutuhan)
-        // ...
 
         return $tokens;
     }

@@ -38,7 +38,7 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <form action="{{ route('rekomendasi_bantuan') }}" method="POST">
+                                        <form action="{{ url('rekomendasi-bantuan?id='.$userId) }}" method="POST">
                                             @csrf
                                             <div class="row mb-5">
                                                 <div class="col-lg-8">
@@ -55,24 +55,19 @@
                                         <!-- Daftar Bantuan -->
                                         <h5>Daftar Desa Yang Memerlukan Bantuan</h5>
                                         <ul class="list-group">
-                                            <li class="list-group-item">
-                                                <span>Desa : ini desa</span><br>
-                                                <span>Potensi : ini potensi</span><br>
-                                                <span>Permasalahan : ini permasalahan</span><br><br>
-                                                <a href=""><button class="btn btn-sm btn-secondary">Dapatkan Rekomendasi</button></a>
-                                            </li>
-                                            <li class="list-group-item">
-                                                <span>Desa : ini desa</span><br>
-                                                <span>Potensi : ini potensi</span><br>
-                                                <span>Permasalahan : ini permasalahan</span><br><br>
-                                                <a href=""><button class="btn btn-sm btn-secondary">Dapatkan Rekomendasi</button></a>
-                                            </li>
-                                            <li class="list-group-item">
-                                                <span>Desa : ini desa</span><br>
-                                                <span>Potensi : ini potensi</span><br>
-                                                <span>Permasalahan : ini permasalahan</span><br><br>
-                                                <a href=""><button class="btn btn-sm btn-secondary">Dapatkan Rekomendasi</button></a>
-                                            </li>
+                                            @foreach ($permasalahans as $permasalahan)
+                                                <li class="list-group-item">
+                                                    <span>Desa : {{ ucwords($permasalahan->desa->desa) }}</span><br>
+                                                    <span>Potensi : {{ ucfirst($permasalahan->potensi) }}</span><br>
+                                                    <span>Permasalahan : {{ ucfirst($permasalahan->permasalahan) }}</span><br><br>
+                                                    <form action="{{ url('rekomendasi-bantuan?id='.$userId) }}" method="POST">
+                                                        @csrf
+                                                        <input type="hidden" name="potensi" value="{{ $permasalahan->potensi }}" id="">
+                                                        <input type="hidden" name="permasalahan" value="{{ $permasalahan->permasalahan }}" id="">
+                                                        <button type="submit" class="btn btn-sm btn-secondary">Dapatkan Rekomendasi</button>
+                                                    </form>
+                                                </li>
+                                            @endforeach
                                         </ul>
                                     </div>
                                 </div>
