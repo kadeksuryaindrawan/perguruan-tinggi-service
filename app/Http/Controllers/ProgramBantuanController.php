@@ -65,6 +65,12 @@ class ProgramBantuanController extends Controller
         }
 
         try {
+            Data::create([
+                'desa' => $request->desa,
+                'potensi' => $request->potensi,
+                'permasalahan' => $request->permasalahan,
+                'bantuan' => $request->bantuan,
+            ]);
             $history = HistoryBantuan::create([
                 'id_desa' => $request->id_desa,
                 'id_permasalahan' => $request->id_permasalahan,
