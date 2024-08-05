@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Data;
+use App\Models\HistoryBantuan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Validator;
 
 class ProgramBantuanController extends Controller
 {
@@ -15,44 +17,102 @@ class ProgramBantuanController extends Controller
         return view('programbantuan.index',compact('permasalahans'));
     }
 
+    public function pilih_rekomendasi(Request $request)
+    {
+        $user_id = $request->id;
+        $permasalahan_id = $request->permasalahan_id;
+        $history_id = $request->id_history;
+
+        if($permasalahan_id != 'null'){
+            if($history_id != null){
+                $history = Data::find($history_id);
+                $response = Http::get('http://127.0.0.1:8002/api/getDataPotensiPermasalahanDesa/' . $permasalahan_id);
+                $permasalahan = $response->object();
+                return view('programbantuan.pilihrekomendasi', compact('history', 'permasalahan'));
+            }else{
+                $history = null;
+                $response = Http::get('http://127.0.0.1:8002/api/getDataPotensiPermasalahanDesa/' . $permasalahan_id);
+                $permasalahan = $response->object();
+                return view('programbantuan.pilihrekomendasi', compact('history', 'permasalahan'));
+            }
+
+        }else{
+            if ($history_id != null) {
+                $history = Data::find($history_id);
+                $permasalahan = null;
+                return view('programbantuan.pilihrekomendasi', compact('history', 'permasalahan'));
+            } else {
+                $history = null;
+                $permasalahan = null;
+                return view('programbantuan.pilihrekomendasi', compact('history', 'permasalahan'));
+            }
+
+        }
+    }
+
+    public function pilih_process(Request $request,$id)
+    {
+        $validator = Validator::make($request->all(), [
+            'desa' => ['required', 'string', 'max:255'],
+            'potensi' => ['required'],
+            'permasalahan' => ['required'],
+            'bantuan' => ['required'],
+            'perguruan_tinggi' => ['required', 'string', 'max:255'],
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        try {
+            $history = HistoryBantuan::create([
+                'id_desa' => $request->id_desa,
+                'id_permasalahan' => $request->id_permasalahan,
+                'user_id' => $id,
+                'desa' => $request->desa,
+                'potensi' => $request->potensi,
+                'permasalahan' => $request->permasalahan,
+                'bantuan' => $request->bantuan,
+                'perguruan_tinggi' => $request->perguruan_tinggi,
+            ]);
+
+            if($history->id_desa != null){
+                Http::post('http://127.0.0.1:8002/api/editStatusPermasalahanSudah/' . $request->id_permasalahan);
+            }
+            return redirect('/history?id=' . $id)->with('success', 'Berhasil simpan data bantuan!');
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
     public function rekomendasi_bantuan(Request $request)
     {
-        if($request->inputTeks == null){
-            $inputTeksGabungan = $request->potensi .' '. $request->permasalahan;
-        }else{
+        if ($request->inputTeks == null) {
+            $inputTeksGabungan = $request->potensi . ' ' . $request->permasalahan;
+            $permasalahan_id = $request->permasalahan_id;
+        } else {
             $inputTeksGabungan = $request->inputTeks;
+            $permasalahan_id = null;
         }
 
         $dataHistori = $this->data_histori();
-
-        echo "Data Input : " . $inputTeksGabungan;
-        echo "<br/>";
-        echo "<br/>";
-
         $jumlahRekomendasi = 5;
         $rekomendasiArray = $this->getMultipleRekomendasiBantuanDanPermasalahan($inputTeksGabungan, $dataHistori, $jumlahRekomendasi);
-
-        //fungsi untuk mengurutkan dari persentase tertinggi
         usort($rekomendasiArray, [$this, 'compareCosineSimilarity']);
 
-        if ($rekomendasiArray[0]['cosine_similarity'] == 0) {
-            echo "Tidak ada data tersebut!";
-        }
-        // Cetak rekomendasi yang didapatkan
-        foreach ($rekomendasiArray as $rekomendasi) {
+        // Ambil hanya rekomendasi yang memiliki cosine_similarity lebih dari 0
+        $rekomendasiArray = array_filter($rekomendasiArray, function ($rekomendasi) {
+            return $rekomendasi['cosine_similarity'] > 0;
+        });
 
-            // Cek apakah nilai cosine similarity adalah 0 sebelum mencetaknya
-            if ($rekomendasi["cosine_similarity"] != 0) {
-                echo "Id histori: " . $rekomendasi["id"] . "<br>";
-                echo "Rekomendasi Potensi: " . $rekomendasi["potensi"] . "<br>";
-                echo "Rekomendasi Permasalahan: " . $rekomendasi["permasalahan"] . "<br>";
-                echo "Rekomendasi Program Bantuan: " . $rekomendasi["bantuan"] . "<br>";
-                echo "Nilai Cosine Similarity: " . $rekomendasi["cosine_similarity"] . "<br>";
-                echo "Persentase Kesamaan: " . $this->cosineSimilarityToPercentage($rekomendasi["cosine_similarity"]) . "%<br>";
-            }
+        // Batasi jumlah rekomendasi yang ditampilkan
+        $rekomendasiArray = array_slice($rekomendasiArray, 0, $jumlahRekomendasi);
 
-            echo "<br>";
-        }
+        return response()->json([
+            'inputTeksGabungan' => $inputTeksGabungan,
+            'permasalahanId' => $permasalahan_id,
+            'rekomendasiArray' => $rekomendasiArray
+        ]);
 
     }
 

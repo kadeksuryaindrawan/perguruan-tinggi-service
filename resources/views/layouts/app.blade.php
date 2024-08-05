@@ -31,6 +31,9 @@
 	<!-- Style css -->
     <link href="{{ asset('assets') }}/css/style.css" rel="stylesheet">
 
+    <!-- Datatable -->
+    <link href="{{ asset('assets') }}/vendor/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
+
 </head>
 <body>
 
@@ -146,6 +149,11 @@
 							<span class="nav-text">Program Bantuan</span>
 						</a>
 					</li>
+                    <li><a href="{{ url('/history?id='.$userId) }}" class="ai-icon" aria-expanded="false">
+							<i class="flaticon-005-back-arrow"></i>
+							<span class="nav-text">Riwayat Bantuan</span>
+						</a>
+					</li>
                 </ul>
 			</div>
         </div>
@@ -228,6 +236,10 @@
 	<!-- Apex Chart -->
 	<script src="{{ asset('assets') }}/vendor/apexchart/apexchart.js"></script>
 	<script src="{{ asset('assets') }}/vendor/owl-carousel/owl.carousel.js"></script>
+
+    <!-- Datatable -->
+    <script src="{{ asset('assets') }}/vendor/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="{{ asset('assets') }}/js/plugins-init/datatables.init.js"></script>
 
 	<!-- Dashboard 1 -->
 	<script src="{{ asset('assets') }}/js/dashboard/dashboard-1.js"></script>
