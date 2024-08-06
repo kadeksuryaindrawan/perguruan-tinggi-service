@@ -202,32 +202,6 @@
         Scripts
     ***********************************-->
 
-    <script>
-    function logout() {
-        fetch('http://127.0.0.1:8000/sanctum/csrf-cookie', {
-            method: 'GET',
-            credentials: 'include',  // Pastikan credentials diaktifkan
-        })
-        .then(response => {
-            return fetch('http://127.0.0.1:8000/logout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')  // Pastikan token ada di localStorage
-                },
-                credentials: 'include',  // Tambahkan ini untuk mengirimkan cookies
-            });
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Logout failed: ' + response.statusText);
-            }
-            localStorage.removeItem('token'); // Hapus token dari localStorage
-            window.location.href = 'http://127.0.0.1:8000/login'; // Redirect ke halaman login
-        })
-        .catch(error => console.error(error.message));
-    }
-    </script>
     <!-- Required vendors -->
     <script src="{{ asset('assets') }}/vendor/global/global.min.js"></script>
 	<script src="{{ asset('assets') }}/vendor/chart.js/Chart.bundle.min.js"></script>
